@@ -1,5 +1,6 @@
 #include "minirede.h"
 #include <cstring>
+#include <string> 
 
 using namespace std;
 
@@ -203,6 +204,40 @@ usuario* buscarArvore(NoArvore* no, int idBuscado){
     return buscarArvore(no->dir, idBuscado);
 }
 
+//em ordem
+void imprimeEmOrdem(NoArvore* No, ostream &saida){
+    if(No == nullptr)return;
+
+    imprimeEmOrdem(No->esq, saida);
+    saida << "USER " <<  No->user->id << " " << No->user->username << " " << No->user->nome << "\n";
+    imprimeEmOrdem(No->dir, saida);
+}
+
+//Funcoes para listas, insere ordenado por id
+bool insereLista(NoLista* &inicio, usuario* n){
+    if(inicio == nullptr || n->id < inicio->user->id){
+        NoLista* novo = new NoLista;
+        novo->user= n;
+        novo->prox= inicio;
+        inicio= novo;
+        return true;
+    }
+
+    if(inicio->user->id == n->id)return false;
+
+    NoLista* atual = inicio;
+    while(atual->prox != nullptr && atual->prox->user->id < n->id){
+        atual = atual->prox;
+    }
+    if(atual->prox->user->id== n->id && atual->prox != nullptr)return false;
+
+    NoLista* novo = new NoLista;
+    novo->user== n;
+    novo->prox= atual->prox;
+    atual->prox= novo;
+    return true;
+}
+
 void liberarMiniRede(MiniRede &rede)
 {
     // TODO
@@ -213,6 +248,43 @@ void processarComandos(MiniRede &rede, std::istream &entrada, std::ostream &said
     // TODO: ler comandos da entrada padrao ate END.
     // Para cada comando, chamar a funcao correspondente.
     // Nao imprimir menu, prompt ou texto extra.
+    string comando;
+    while (entrada >> comando){
+        if(comando == "END"){
+            break;
+        }
+        else if(comando== "ADD_USER"){
+            int id;
+            string username;
+            string nome;
+            entrada >> id >> username >> nome;
+            cadastrarUsuario(rede, id, username.c_str(), nome.c_str(), saida);
+        }
+        else if(comando == "FIND_USER"){
+            int id;
+            entrada >> id;
+            buscarUsuarioPorId(rede, id, saida);
+        }
+        else if(comando == "FIND_USERNAME"){
+            string username;
+            entrada >> username;
+            buscarUsuarioPorUsername(rede, username.c_str(), saida);
+        }
+        else if(comando == "LIST_USERS"){
+            listarUsuarios(rede, saida);
+        }
+        else if(comando == "FOLLOW"){
+            int id1;
+            int id2;
+            entrada >> id1 >> id2;
+            seguirUsuario(rede, id1, id2, saida);
+        }
+        else if(comando == "LIST_FOLLOWING"){
+            int id;
+            entrada >> id;
+            listarSeguindo(rede, id, saida);
+        }
+    }
 }
 
 void cadastrarUsuario(MiniRede &rede, int id, const char username[], const char nomeCompleto[], std::ostream &saida)
@@ -239,8 +311,7 @@ void cadastrarUsuario(MiniRede &rede, int id, const char username[], const char 
     strncpy(novoUsuario->nome, nomeCompleto, TAM_NOME - 1);
     novoUsuario->nome[TAM_NOME - 1] = '\0';
    
-    //lista de seguindo e seguidores
-    novoUsuario->seguidores = nullptr;
+    //lista de seguindo
     novoUsuario->seguindo = nullptr;
     
     //hash para username
@@ -279,17 +350,48 @@ void buscarUsuarioPorUsername(MiniRede &rede, const char username[], std::ostrea
 
 void listarUsuarios(MiniRede &rede, std::ostream &saida)
 {
-    // TODO
+    saida << "USERS_BEGIN\n";
+    imprimeEmOrdem(rede.raizArvore, saida);
+    saida << "USERS_END\n";
 }
 
 void seguirUsuario(MiniRede &rede, int idSeguidor, int idSeguido, std::ostream &saida)
 {
-    // TODO
+    if(idSeguido==idSeguidor){
+        saida << "ERROR CANNOT_FOLLOW_SELF\n";
+    }
+    usuario* a = buscarArvore(rede.raizArvore, idSeguidor); 
+    usuario* b = buscarArvore(rede.raizArvore, idSeguido);
+
+    if( a == nullptr || b== nullptr){
+        saida << "ERROR USER_NOT_FOUND\n";
+        return;
+    }
+    
+    bool existem = insereLista(a->seguindo, b);
+    if(existem){
+        saida << "FOLLOWED\n";
+    }
+    else{
+        saida << "ERROR ALREADY_FOLLOWING\n";
+    }
 }
 
 void listarSeguindo(MiniRede &rede, int idUsuario, std::ostream &saida)
 {
-    // TODO
+    usuario* a = buscarArvore(rede.raizArvore, idUsuario);
+    if(a == nullptr){
+        saida << "ERROR USER_NOT_FOUND\n";
+        return;
+    }
+
+    saida << "FOLLOWING_BEGIN\n";
+    NoLista* atual = a->seguindo;
+    while(atual != nullptr){
+        saida << "USER " << atual->user->id << " " << atual->user->username << " " << atual->user->nome << "\n";
+        atual=atual->prox;
+    }
+    saida << "FOLLOWING_END\n";
 }
 
 void cadastrarPublicacao(MiniRede &rede, int idPost, int idAutor, int timestamp, const char texto[], std::ostream &saida)

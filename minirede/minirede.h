@@ -18,7 +18,6 @@ struct usuario
     int id;
     char username[TAM_USERNAME];
     char nome[TAM_NOME];
-    NoLista* seguidores;
     NoLista* seguindo;
 };
 
@@ -87,5 +86,15 @@ void listarTopPosts(MiniRede &rede, int k, std::ostream &saida);
 int funcaoHash(const char username[], int tamanhoTabela);
 void inserirHash(NoLista* tabela[], int tamanhoTabela, usuario* novoUsuario);
 usuario* buscarHash(NoLista* tabela[], int tamanhoTabela, const char usernameBuscado[]);
+NoArvore* rotDir(NoArvore* y);
+NoArvore* rotEsq(NoArvore* y);
+NoArvore* rotEsqDir(NoArvore* a);
+NoArvore* rotDirEsq(NoArvore* a);
+NoArvore* casoEsquerda(NoArvore* a, bool& aumentouAltura);
+NoArvore* casoDireita(NoArvore* a, bool& aumentouAltura);
+NoArvore* insereAVL(NoArvore* a, usuario* novoUsuario, bool& aumentouAltura);
+usuario* buscarArvore(NoArvore* no, int idBuscado);
+void imprimeEmOrdem(NoArvore* No, std::ostream &saida);
+bool insereLista(NoLista* &inicio, usuario* n);
 
 #endif
