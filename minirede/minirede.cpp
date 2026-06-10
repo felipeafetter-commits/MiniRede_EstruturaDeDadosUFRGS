@@ -1,36 +1,43 @@
 #include "minirede.h"
 #include <cstring>
-#include <string> 
+#include <string>
 
 using namespace std;
 
-//chave
-int funcaoHash(const char username[], int tamanhoTabela) {
+// chave
+int funcaoHash(const char username[], int tamanhoTabela)
+{
     unsigned int hash = 0;
-    for(int i = 0; username[i]!= '\0'; i++){
-        hash= (hash * 31 + username[i]) % tamanhoTabela;
+    for (int i = 0; username[i] != '\0'; i++)
+    {
+        hash = (hash * 31 + username[i]) % tamanhoTabela;
     }
-    return hash; 
-} 
+    return hash;
+}
 
 // inserir na tabela(q negocio complicado q é hash em)
-void inserirHash(NoLista* tabela[], int tamanhoTabela, usuario* novoUsuario){
-    if(novoUsuario == nullptr)return;
+void inserirHash(NoLista *tabela[], int tamanhoTabela, usuario *novoUsuario)
+{
+    if (novoUsuario == nullptr)
+        return;
     int indice = funcaoHash(novoUsuario->username, tamanhoTabela);
 
-    NoLista* novoNo = new NoLista;
+    NoLista *novoNo = new NoLista;
     novoNo->user = novoUsuario;
     novoNo->prox = tabela[indice];
-    tabela[indice]= novoNo;
+    tabela[indice] = novoNo;
 }
 
 // busca do usuario
-usuario* buscarHash(NoLista* tabela[], int tamanhoTabela, const char usernameBuscado[]){
+usuario *buscarHash(NoLista *tabela[], int tamanhoTabela, const char usernameBuscado[])
+{
     int indice = funcaoHash(usernameBuscado, tamanhoTabela);
-    NoLista* atual = tabela[indice];
+    NoLista *atual = tabela[indice];
 
-    while(atual != nullptr){
-        if(strcmp(atual->user->username, usernameBuscado)==0){
+    while (atual != nullptr)
+    {
+        if (strcmp(atual->user->username, usernameBuscado) == 0)
+        {
             return atual->user;
         }
 
@@ -39,202 +46,275 @@ usuario* buscarHash(NoLista* tabela[], int tamanhoTabela, const char usernameBus
     return nullptr;
 }
 
-//esvazia os ponteiros
+// esvazia os ponteiros
 void inicializarMiniRede(MiniRede &rede)
 {
-    for(int i = 0; i< TAM_HASH; i++){
-        rede.tabelaHash[i]= nullptr;
+    for (int i = 0; i < TAM_HASH; i++)
+    {
+        rede.tabelaHash[i] = nullptr;
     }
 
     rede.raizArvore = nullptr;
-
+    rede.raizArvorePosts = nullptr;
 }
 
+// funcoes de arvore aqui:
 
-//funcoes de arvore aqui:
+NoArvore *rotDir(NoArvore *y)
+{
+    if (y == nullptr || y->esq == nullptr)
+        return y;
 
- NoArvore* rotDir(NoArvore* y){
-    if(y==nullptr || y->esq == nullptr)return y;
-
-    NoArvore* u= y->esq;
-    y->esq= u->dir;
-    u->dir=y;
-    y->FB= 0;
-    u->FB= 0;
+    NoArvore *u = y->esq;
+    y->esq = u->dir;
+    u->dir = y;
+    y->FB = 0;
+    u->FB = 0;
     return u;
- }
+}
 
- NoArvore* rotEsq(NoArvore* y){
-    if(y==nullptr || y->dir== nullptr)return y;
+NoArvore *rotEsq(NoArvore *y)
+{
+    if (y == nullptr || y->dir == nullptr)
+        return y;
 
-    NoArvore* u= y->dir;
-    y->dir= u->esq;
-    u->esq=y;
-    y->FB= 0;
-    u->FB= 0;
+    NoArvore *u = y->dir;
+    y->dir = u->esq;
+    u->esq = y;
+    y->FB = 0;
+    u->FB = 0;
     return u;
- }
+}
 
- NoArvore* rotEsqDir(NoArvore* a) {
-    if(a==nullptr || a->esq==nullptr || a->esq->dir==nullptr)return a;
+NoArvore *rotEsqDir(NoArvore *a)
+{
+    if (a == nullptr || a->esq == nullptr || a->esq->dir == nullptr)
+        return a;
 
-    NoArvore* filho = a->esq;
-    NoArvore* neto = filho->dir;
+    NoArvore *filho = a->esq;
+    NoArvore *neto = filho->dir;
     int FBNeto = neto->FB;
 
     a->esq = rotEsq(a->esq);
-    NoArvore* novaRaiz = rotDir(a);
+    NoArvore *novaRaiz = rotDir(a);
 
-    if(FBNeto == -1){a->FB=1; filho->FB=0;}
-    else if(FBNeto == 1){a->FB=0; filho->FB=-1;}
-    else{a->FB=0; filho->FB=0;}
-    novaRaiz->FB=0;
+    if (FBNeto == -1)
+    {
+        a->FB = 1;
+        filho->FB = 0;
+    }
+    else if (FBNeto == 1)
+    {
+        a->FB = 0;
+        filho->FB = -1;
+    }
+    else
+    {
+        a->FB = 0;
+        filho->FB = 0;
+    }
+    novaRaiz->FB = 0;
 
     return novaRaiz;
 }
 
-NoArvore* rotDirEsq(NoArvore* a) {
-    if(a==nullptr || a->dir==nullptr || a->dir->esq== nullptr)return a;
-   NoArvore* filho = a->dir;
-    NoArvore* neto = filho->esq;
+NoArvore *rotDirEsq(NoArvore *a)
+{
+    if (a == nullptr || a->dir == nullptr || a->dir->esq == nullptr)
+        return a;
+    NoArvore *filho = a->dir;
+    NoArvore *neto = filho->esq;
     int FBNeto = neto->FB;
 
     a->dir = rotDir(a->dir);
-    NoArvore* novaRaiz = rotEsq(a);
+    NoArvore *novaRaiz = rotEsq(a);
 
-    if(FBNeto == -1){a->FB=1; filho->FB=0;}
-    else if(FBNeto == 1){a->FB=0; filho->FB=-1;}
-    else{a->FB=0; filho->FB=0;}
-    novaRaiz->FB=0;
+    if (FBNeto == -1)
+    {
+        a->FB = 1;
+        filho->FB = 0;
+    }
+    else if (FBNeto == 1)
+    {
+        a->FB = 0;
+        filho->FB = -1;
+    }
+    else
+    {
+        a->FB = 0;
+        filho->FB = 0;
+    }
+    novaRaiz->FB = 0;
 
     return novaRaiz;
 }
-// verifica rotacao 
-NoArvore* casoEsquerda(NoArvore* a, bool& aumentouAltura) {
-    if (a == nullptr || a->esq == nullptr) {
+// verifica rotacao
+NoArvore *casoEsquerda(NoArvore *a, bool &aumentouAltura)
+{
+    if (a == nullptr || a->esq == nullptr)
+    {
         aumentouAltura = false;
         return a;
     }
-    NoArvore* z = a->esq;
+    NoArvore *z = a->esq;
 
-    if (z->FB == 1) {
-        a = rotDir(a);              
-    } else {
-        a = rotEsqDir(a);     
+    if (z->FB == 1)
+    {
+        a = rotDir(a);
+    }
+    else
+    {
+        a = rotEsqDir(a);
     }
     a->FB = 0;
     aumentouAltura = false;
     return a;
 }
 
-NoArvore* casoDireita(NoArvore* a, bool& aumentouAltura) {
-    if (a == nullptr || a->dir == nullptr) {
+NoArvore *casoDireita(NoArvore *a, bool &aumentouAltura)
+{
+    if (a == nullptr || a->dir == nullptr)
+    {
         aumentouAltura = false;
         return a;
     }
-    NoArvore* z = a->dir;
+    NoArvore *z = a->dir;
 
-    if (z->FB == -1) {
-        a = rotEsq(a);             
-    } else {
-        a = rotDirEsq(a);      
+    if (z->FB == -1)
+    {
+        a = rotEsq(a);
+    }
+    else
+    {
+        a = rotDirEsq(a);
     }
     a->FB = 0;
     aumentouAltura = false;
     return a;
 }
 
-NoArvore* insereAVL(NoArvore* a, usuario* novoUsuario, bool& aumentouAltura){
-    if(a==nullptr){
-        NoArvore* novo= new NoArvore;
+NoArvore *insereAVL(NoArvore *a, usuario *novoUsuario, bool &aumentouAltura)
+{
+    if (a == nullptr)
+    {
+        NoArvore *novo = new NoArvore;
         novo->user = novoUsuario;
-        novo->FB=0;
-        novo->esq= nullptr;
-        novo->dir= nullptr;
+        novo->FB = 0;
+        novo->esq = nullptr;
+        novo->dir = nullptr;
         aumentouAltura = true;
         return novo;
     }
-    if(novoUsuario->id < a->user->id){
+    if (novoUsuario->id < a->user->id)
+    {
         a->esq = insereAVL(a->esq, novoUsuario, aumentouAltura);
 
-        if(aumentouAltura){
-            switch(a->FB){
-                case -1:
-                    a->FB=0;
-                    aumentouAltura= false;
-                    break;
-                case 0:
-                    a->FB= 1;
-                    break;
-                case 1:
-                    a= casoEsquerda(a, aumentouAltura);
-                    break;
+        if (aumentouAltura)
+        {
+            switch (a->FB)
+            {
+            case -1:
+                a->FB = 0;
+                aumentouAltura = false;
+                break;
+            case 0:
+                a->FB = 1;
+                break;
+            case 1:
+                a = casoEsquerda(a, aumentouAltura);
+                break;
             }
         }
     }
 
-    else if(novoUsuario->id > a->user->id){
+    else if (novoUsuario->id > a->user->id)
+    {
         a->dir = insereAVL(a->dir, novoUsuario, aumentouAltura);
 
-        if(aumentouAltura){
-            switch(a->FB){
-                case 1:
-                    a->FB=0;
-                    aumentouAltura= false;
-                    break;
-                case 0:
-                    a->FB= -1;
-                    break;
-                case -1:
-                    a= casoDireita(a, aumentouAltura);
-                    break;
+        if (aumentouAltura)
+        {
+            switch (a->FB)
+            {
+            case 1:
+                a->FB = 0;
+                aumentouAltura = false;
+                break;
+            case 0:
+                a->FB = -1;
+                break;
+            case -1:
+                a = casoDireita(a, aumentouAltura);
+                break;
             }
         }
     }
-    else{ 
-        aumentouAltura= false;
+    else
+    {
+        aumentouAltura = false;
     }
     return a;
 }
 
-usuario* buscarArvore(NoArvore* no, int idBuscado){
-    if(no==nullptr)return nullptr;
-    if(no->user->id==idBuscado)return no->user;
-    if(idBuscado < no->user->id)return buscarArvore(no->esq, idBuscado);
+usuario *buscarArvore(NoArvore *no, int idBuscado)
+{
+    if (no == nullptr)
+        return nullptr;
+    if (no->user->id == idBuscado)
+        return no->user;
+    if (idBuscado < no->user->id)
+        return buscarArvore(no->esq, idBuscado);
     return buscarArvore(no->dir, idBuscado);
 }
 
-//em ordem
-void imprimeEmOrdem(NoArvore* No, ostream &saida){
-    if(No == nullptr)return;
+Publicacao *buscarArvorePost(NoArvorePosts *no, int idPost)
+{
+    if (no == nullptr)
+        return nullptr;
+    if (no->publicacao->id == idPost)
+        return no->publicacao;
+    if (idPost < no->publicacao->id)
+        return buscarArvorePost(no->esq, idPost);
+    return buscarArvorePost(no->dir, idPost);
+}
+
+// em ordem
+void imprimeEmOrdem(NoArvore *No, ostream &saida)
+{
+    if (No == nullptr)
+        return;
 
     imprimeEmOrdem(No->esq, saida);
-    saida << "USER " <<  No->user->id << " " << No->user->username << " " << No->user->nome << "\n";
+    saida << "USER " << No->user->id << " " << No->user->username << " " << No->user->nome << "\n";
     imprimeEmOrdem(No->dir, saida);
 }
 
-//Funcoes para listas, insere ordenado por id
-bool insereLista(NoLista* &inicio, usuario* n){
-    if(inicio == nullptr || n->id < inicio->user->id){
-        NoLista* novo = new NoLista;
-        novo->user= n;
-        novo->prox= inicio;
-        inicio= novo;
+// Funcoes para listas, insere ordenado por id
+bool insereLista(NoLista *&inicio, usuario *n)
+{
+    if (inicio == nullptr || n->id < inicio->user->id)
+    {
+        NoLista *novo = new NoLista;
+        novo->user = n;
+        novo->prox = inicio;
+        inicio = novo;
         return true;
     }
 
-    if(inicio->user->id == n->id)return false;
+    if (inicio->user->id == n->id)
+        return false;
 
-    NoLista* atual = inicio;
-    while(atual->prox != nullptr && atual->prox->user->id < n->id){
+    NoLista *atual = inicio;
+    while (atual->prox != nullptr && atual->prox->user->id < n->id)
+    {
         atual = atual->prox;
     }
-    if(atual->prox->user->id== n->id && atual->prox != nullptr)return false;
+    if (atual->prox->user->id == n->id && atual->prox != nullptr)
+        return false;
 
-    NoLista* novo = new NoLista;
-    novo->user== n;
-    novo->prox= atual->prox;
-    atual->prox= novo;
+    NoLista *novo = new NoLista;
+    novo->user == n;
+    novo->prox = atual->prox;
+    atual->prox = novo;
     return true;
 }
 
@@ -249,37 +329,45 @@ void processarComandos(MiniRede &rede, std::istream &entrada, std::ostream &said
     // Para cada comando, chamar a funcao correspondente.
     // Nao imprimir menu, prompt ou texto extra.
     string comando;
-    while (entrada >> comando){
-        if(comando == "END"){
+    while (entrada >> comando)
+    {
+        if (comando == "END")
+        {
             break;
         }
-        else if(comando== "ADD_USER"){
+        else if (comando == "ADD_USER")
+        {
             int id;
             string username;
             string nome;
             entrada >> id >> username >> nome;
             cadastrarUsuario(rede, id, username.c_str(), nome.c_str(), saida);
         }
-        else if(comando == "FIND_USER"){
+        else if (comando == "FIND_USER")
+        {
             int id;
             entrada >> id;
             buscarUsuarioPorId(rede, id, saida);
         }
-        else if(comando == "FIND_USERNAME"){
+        else if (comando == "FIND_USERNAME")
+        {
             string username;
             entrada >> username;
             buscarUsuarioPorUsername(rede, username.c_str(), saida);
         }
-        else if(comando == "LIST_USERS"){
+        else if (comando == "LIST_USERS")
+        {
             listarUsuarios(rede, saida);
         }
-        else if(comando == "FOLLOW"){
+        else if (comando == "FOLLOW")
+        {
             int id1;
             int id2;
             entrada >> id1 >> id2;
             seguirUsuario(rede, id1, id2, saida);
         }
-        else if(comando == "LIST_FOLLOWING"){
+        else if (comando == "LIST_FOLLOWING")
+        {
             int id;
             entrada >> id;
             listarSeguindo(rede, id, saida);
@@ -289,18 +377,19 @@ void processarComandos(MiniRede &rede, std::istream &entrada, std::ostream &said
 
 void cadastrarUsuario(MiniRede &rede, int id, const char username[], const char nomeCompleto[], std::ostream &saida)
 {
-    //verifica o username
-    if(buscarHash(rede.tabelaHash, TAM_HASH, username) != nullptr){
+    // verifica o username
+    if (buscarHash(rede.tabelaHash, TAM_HASH, username) != nullptr)
+    {
         saida << "ERROR USER_EXISTS\n";
         return;
     }
-    //verifica id
-    if(buscarArvore(rede.raizArvore, id)!=nullptr){
+    // verifica id
+    if (buscarArvore(rede.raizArvore, id) != nullptr)
+    {
         saida << "ERROR USER_EXISTS\n";
         return;
     }
-    
-    
+
     // inicialização do novo usuário
     usuario *novoUsuario = new usuario;
 
@@ -310,15 +399,15 @@ void cadastrarUsuario(MiniRede &rede, int id, const char username[], const char 
     novoUsuario->username[TAM_USERNAME - 1] = '\0';
     strncpy(novoUsuario->nome, nomeCompleto, TAM_NOME - 1);
     novoUsuario->nome[TAM_NOME - 1] = '\0';
-   
-    //lista de seguindo
+
+    // lista de seguindo
     novoUsuario->seguindo = nullptr;
-    
-    //hash para username
+
+    // hash para username
     inserirHash(rede.tabelaHash, TAM_HASH, novoUsuario);
 
-    //insere arvore de ids
-    bool aumentouAltura=false;
+    // insere arvore de ids
+    bool aumentouAltura = false;
     rede.raizArvore = insereAVL(rede.raizArvore, novoUsuario, aumentouAltura);
 
     saida << "USER_ADDED\n";
@@ -326,11 +415,13 @@ void cadastrarUsuario(MiniRede &rede, int id, const char username[], const char 
 
 void buscarUsuarioPorId(MiniRede &rede, int id, std::ostream &saida)
 {
-    usuario* userEncontrado = buscarArvore(rede.raizArvore, id);
-    if(userEncontrado != nullptr){
+    usuario *userEncontrado = buscarArvore(rede.raizArvore, id);
+    if (userEncontrado != nullptr)
+    {
         saida << "USER " << userEncontrado->id << " " << userEncontrado->username << " " << userEncontrado->nome << "\n";
     }
-    else{
+    else
+    {
         saida << "USER_NOT_FOUND\n";
     }
 }
@@ -338,12 +429,14 @@ void buscarUsuarioPorId(MiniRede &rede, int id, std::ostream &saida)
 void buscarUsuarioPorUsername(MiniRede &rede, const char username[], std::ostream &saida)
 {
     // busca na tabela hash
-    usuario* userEncontrado = buscarHash(rede.tabelaHash, TAM_HASH, username);
+    usuario *userEncontrado = buscarHash(rede.tabelaHash, TAM_HASH, username);
 
-    if(userEncontrado != nullptr){
-        saida << "USER " << userEncontrado-> id << " " << userEncontrado->username << " " << userEncontrado->nome << "\n";
+    if (userEncontrado != nullptr)
+    {
+        saida << "USER " << userEncontrado->id << " " << userEncontrado->username << " " << userEncontrado->nome << "\n";
     }
-    else{
+    else
+    {
         saida << "USER_NOT_FOUND\n";
     }
 }
@@ -357,46 +450,68 @@ void listarUsuarios(MiniRede &rede, std::ostream &saida)
 
 void seguirUsuario(MiniRede &rede, int idSeguidor, int idSeguido, std::ostream &saida)
 {
-    if(idSeguido==idSeguidor){
+    if (idSeguido == idSeguidor)
+    {
         saida << "ERROR CANNOT_FOLLOW_SELF\n";
     }
-    usuario* a = buscarArvore(rede.raizArvore, idSeguidor); 
-    usuario* b = buscarArvore(rede.raizArvore, idSeguido);
+    usuario *a = buscarArvore(rede.raizArvore, idSeguidor);
+    usuario *b = buscarArvore(rede.raizArvore, idSeguido);
 
-    if( a == nullptr || b== nullptr){
+    if (a == nullptr || b == nullptr)
+    {
         saida << "ERROR USER_NOT_FOUND\n";
         return;
     }
-    
+
     bool existem = insereLista(a->seguindo, b);
-    if(existem){
+    if (existem)
+    {
         saida << "FOLLOWED\n";
     }
-    else{
+    else
+    {
         saida << "ERROR ALREADY_FOLLOWING\n";
     }
 }
 
 void listarSeguindo(MiniRede &rede, int idUsuario, std::ostream &saida)
 {
-    usuario* a = buscarArvore(rede.raizArvore, idUsuario);
-    if(a == nullptr){
+    usuario *a = buscarArvore(rede.raizArvore, idUsuario);
+    if (a == nullptr)
+    {
         saida << "ERROR USER_NOT_FOUND\n";
         return;
     }
 
     saida << "FOLLOWING_BEGIN\n";
-    NoLista* atual = a->seguindo;
-    while(atual != nullptr){
+    NoLista *atual = a->seguindo;
+    while (atual != nullptr)
+    {
         saida << "USER " << atual->user->id << " " << atual->user->username << " " << atual->user->nome << "\n";
-        atual=atual->prox;
+        atual = atual->prox;
     }
     saida << "FOLLOWING_END\n";
 }
 
 void cadastrarPublicacao(MiniRede &rede, int idPost, int idAutor, int timestamp, const char texto[], std::ostream &saida)
 {
-    // TODO
+    if (buscarArvore(rede.raizArvore, idAutor))
+    {
+        if (buscarArvorePost(rede.raizArvorePosts, idPost))
+        {
+            saida << "ERROR POST_EXISTS";
+            return;
+        }
+        else
+        {
+            // adicionar na arvore de posts
+        }
+    }
+    else
+    {
+        saida << "ERROR USER_NOT_FOUND\n";
+        return;
+    }
 }
 
 void curtirPublicacao(MiniRede &rede, int idUsuario, int idPost, std::ostream &saida)

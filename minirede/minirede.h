@@ -10,37 +10,73 @@ const int TAM_NOME = 100;
 const int TAM_TEXTO = 280;
 const int TAM_COMANDO = 30;
 const int TAM_HASH = 997;
-struct NoLista;
-  
 
+//cabeçalho das structs
+struct Publicacao;
+struct usuario;
+struct NoLista;
+struct noListPosts;
+struct NoArvore;
+struct NoArvorePosts;
+struct MiniRede;
+
+struct Publicacao
+{
+    int id;
+    int idAutor;
+    int timestamp;
+    char texto[TAM_TEXTO];
+    int curtidas;
+    NoLista *usersLike;
+
+}; 
 struct usuario
 {
     int id;
     char username[TAM_USERNAME];
     char nome[TAM_NOME];
-    NoLista* seguindo;
+    NoLista *seguindo;
+    noListPosts *publicacoes;
 };
 
 struct NoLista
 {
-    usuario* user;
-    NoLista* prox; 
+    usuario *user;
+    NoLista *prox;
+};
+
+struct noListPosts
+{
+    Publicacao *publicacao;
+    noListPosts *prox;
 };
 
 struct NoArvore
 {
-    usuario* user;
-    NoArvore* esq;
-    NoArvore* dir;
-    int FB= 0;
+    usuario *user;
+    NoArvore *esq;
+    NoArvore *dir;
+    int FB = 0;
 };
+
+struct NoArvorePosts
+{
+    Publicacao *publicacao;
+    NoArvorePosts *esq;
+    NoArvorePosts *dir;
+    int FB = 0;
+};
+
+
+
 
 struct MiniRede
 {
-    NoLista* tabelaHash[TAM_HASH];
-    NoArvore* raizArvore;
-};
+    NoLista *tabelaHash[TAM_HASH];
+    NoArvore *raizArvore;
+    NoArvorePosts *raizArvorePosts;
 
+};
 
 // Sugestao de structs que provavelmente serao necessarias:
 // - Usuario
@@ -52,8 +88,6 @@ struct MiniRede
 // - nos para fila de notificacoes
 //
 // Os campos de cada struct fazem parte do projeto dos alunos.
-
-
 
 void inicializarMiniRede(MiniRede &rede);
 void liberarMiniRede(MiniRede &rede);
@@ -84,17 +118,17 @@ void listarTopPosts(MiniRede &rede, int k, std::ostream &saida);
 
 // nossas funcoes auxiliares
 int funcaoHash(const char username[], int tamanhoTabela);
-void inserirHash(NoLista* tabela[], int tamanhoTabela, usuario* novoUsuario);
-usuario* buscarHash(NoLista* tabela[], int tamanhoTabela, const char usernameBuscado[]);
-NoArvore* rotDir(NoArvore* y);
-NoArvore* rotEsq(NoArvore* y);
-NoArvore* rotEsqDir(NoArvore* a);
-NoArvore* rotDirEsq(NoArvore* a);
-NoArvore* casoEsquerda(NoArvore* a, bool& aumentouAltura);
-NoArvore* casoDireita(NoArvore* a, bool& aumentouAltura);
-NoArvore* insereAVL(NoArvore* a, usuario* novoUsuario, bool& aumentouAltura);
-usuario* buscarArvore(NoArvore* no, int idBuscado);
-void imprimeEmOrdem(NoArvore* No, std::ostream &saida);
-bool insereLista(NoLista* &inicio, usuario* n);
+void inserirHash(NoLista *tabela[], int tamanhoTabela, usuario *novoUsuario);
+usuario *buscarHash(NoLista *tabela[], int tamanhoTabela, const char usernameBuscado[]);
+NoArvore *rotDir(NoArvore *y);
+NoArvore *rotEsq(NoArvore *y);
+NoArvore *rotEsqDir(NoArvore *a);
+NoArvore *rotDirEsq(NoArvore *a);
+NoArvore *casoEsquerda(NoArvore *a, bool &aumentouAltura);
+NoArvore *casoDireita(NoArvore *a, bool &aumentouAltura);
+NoArvore *insereAVL(NoArvore *a, usuario *novoUsuario, bool &aumentouAltura);
+usuario *buscarArvore(NoArvore *no, int idBuscado);
+void imprimeEmOrdem(NoArvore *No, std::ostream &saida);
+bool insereLista(NoLista *&inicio, usuario *n);
 
 #endif
