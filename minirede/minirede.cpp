@@ -625,6 +625,7 @@ void cadastrarUsuario(MiniRede &rede, int id, const char username[], const char 
     novoUsuario->notificacoes = new Fila;
     novoUsuario->notificacoes->inicio = nullptr;
     novoUsuario->notificacoes->fim = nullptr;
+    novoUsuario->publicacoes = nullptr;
 
     // hash para username
     inserirHash(rede.tabelaHash, TAM_HASH, novoUsuario);
@@ -745,8 +746,32 @@ void cadastrarPublicacao(MiniRede &rede, int idPost, int idAutor, int timestamp,
             publicacao->usersLike = nullptr;
 
             // add na arvore de publicaçao
+            bool aumentouAltura = false;
+            rede.raizArvorePosts = insereAVL(rede.raizArvorePosts, publicacao, aumentouAltura);
 
             // add na lista do usuário
+            noListPosts *no = new noListPosts;
+            no->publicacao = publicacao;
+            no->prox = nullptr;
+
+            if (auxUser->publicacoes == nullptr)
+            {
+                auxUser->publicacoes = no;
+            }
+            else
+            {
+                noListPosts *aux = auxUser->publicacoes;
+                noListPosts *aux2 = nullptr;
+
+                while (aux != nullptr)
+                {
+                    aux2 = aux;
+                    aux = aux->prox;
+                }
+                aux2->prox = no;
+            }
+
+            saida << "POST_ADDED\n";
         }
     }
     else
